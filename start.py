@@ -3,10 +3,9 @@ from datetime import datetime
 from datetime import timedelta
 from urllib.request import Request
 from urllib.request import urlopen
+from cache import get_html
 
-from helper import *
 from bs4 import BeautifulSoup as soup
-
 
 
 class Start:
@@ -56,26 +55,82 @@ class Start:
 
         #print(matches_soon)
         for match in matches_soon:
-            self.scrape_match_page(match)
-            break #remove l8r
-
+            ret = self.scrape_match_page(match)
+            if ret != 0:
+                break #remove l8r
 
 
     def scrape_match_page(self,match_url):
 
         url = 'https://www.hltv.org' + match_url
         print(url)
-
-        req = Request(self.upcoming_matches_url, headers= self.hdr)
-        u_client = urlopen(req)
-        match_html = u_client.read()
-        u_client.close()
-
+        match_id = url.split('/')[4]
+        print(match_id)
+        match_html = get_html(url,True)
         match_soup = soup(match_html, 'html.parser')
 
-        betting_table = match_soup.find_all('div', class_='betting standard-box padding')
-        print(match_soup)
+        team1 = match_soup.find('div',class_='team1-gradient')
+        team2 = match_soup.find('div', class_='team2-gradient')
 
+        print (team2)
+
+        team1_id = team1.find('a')
+        team2_id = team2.find('a')
+
+        if team1_id:
+            team1_id = team1_id['href'].split('/')[2]
+        else:
+            print('error no team id')
+            return 0
+
+        if team2_id:
+            team2_id= team2_id['href'].split('/')[2]
+        else:
+            print('error no team id')
+            return 0
+
+        print(team1_id)
+        print(team2_id)
+
+        betting_div = match_soup.find('div', class_='betting standard-box padding')
+        if betting_div == 'None':
+            print('error no betting table')
+            return 0
+
+        betting_table = betting_div.find('table')
+        #print(betting_table)
+        table_rows = betting_table.find_all('tr')
+
+        columns = ['Team_1_ID', 'Team_2_ID']
+
+        match_odds_dataframe = pd.DataFrame([[team1_id, team2_id]], columns=columns)
+        # match_odds_dataframe['Team_1_ID'] = int(team1_id)
+        # match_odds_dataframe['Team_2_ID'] = int(team2_id)
+        #match_odds_dataframe = match_odds_dataframe.append()
+        match_odds_dataframe.index = [match_id] #insert match id
+        #print(match_odds_dataframe.head(1))
+
+        for tr in table_rows:
+
+
+            #geoprovider = tr['id']
+            #print(tr)
+
+            if(str(tr.get('id')).split('_')[0] == 'geoprovider'):
+                agency = str(tr.get('id')).split('_')[1]
+                odds = tr.find_all('td', class_='odds-cell border-left')
+                if odds:
+                    #print(odds[0].text)
+                    #print('\n')
+                    team1_odds = odds[0].text
+                    team2_odds = odds[2].text
+
+                    match_odds_dataframe['%s_team1' % agency] = team1_odds
+                    match_odds_dataframe['%s_team2' % agency] = team2_odds
+
+
+        print(match_odds_dataframe.head(1))
+                #print(agency)
 
         #print(upcoming_matches)
 
