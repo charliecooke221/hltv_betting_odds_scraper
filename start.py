@@ -13,7 +13,7 @@ class Start:
     upcoming_matches_url = 'https://www.hltv.org/matches'
     hdr = {'User-Agent' : 'Mozilla/5.0'}
     test = 0
-    max_time_from_now = timedelta(hours=99)
+    max_time_from_now = timedelta(hours=24)
 
     def __init__(self):
         
@@ -61,7 +61,7 @@ class Start:
             # if ret != 0:
             #     break #remove l8r
             #
-            break
+            #break
 
 
     def scrape_match_page(self,match_url):
@@ -127,11 +127,11 @@ class Start:
 
             #geoprovider = tr['id']
             #print(tr)
-            print(tr.get('class')[-1])
+            #print(tr.get('class')[-1])
 
-            if(str(tr.get('id')).split('_')[0] == 'geoprovider'):  # NOT WORK
-                agency = str(tr.get('id')).split('_')[1]
-                # print(agency)
+            if(str(tr.get('class')[-1]).split('_')[0] == 'geoprovider'):  # searches rows that contain betting agencies data
+                agency = str(tr.get('class')[-1]).split('_')[1]
+                #print(agency)
                 odds = tr.find_all('td', class_='odds-cell border-left')
                 if odds:
                     #print(odds[0].text)
@@ -143,18 +143,23 @@ class Start:
                     match_odds_dataframe['%s_team2' % agency] = team2_odds
 
 
-        print(match_odds_dataframe.head())
+        #print(match_odds_dataframe.head())
         #print(self.all_match_odds.head())
         #print(match_id)
         #print(self.all_match_odds.loc[int(match_id)])
 
         if int(match_id) in self.all_match_odds.index:
-            #print('its in there alright')
-            self.all_match_odds.update(match_odds_dataframe,overwrite=True)
-        else:
-            self.all_match_odds.append(match_odds_dataframe)
 
-        #self.all_match_odds.to_csv('MatchOdds.csv') testtt
+            self.all_match_odds.update(match_odds_dataframe,overwrite=True)
+            print('updated  %s' % match_id)
+        else:
+
+            self.all_match_odds = self.all_match_odds.append(match_odds_dataframe)
+
+        #print(self.all_match_odds.head())
+
+
+        self.all_match_odds.to_csv('MatchOdds.csv')
 
         #print(upcoming_matches)
 
