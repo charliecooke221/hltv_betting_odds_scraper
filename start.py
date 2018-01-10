@@ -13,11 +13,12 @@ class Start:
     upcoming_matches_url = 'https://www.hltv.org/matches'
     hdr = {'User-Agent' : 'Mozilla/5.0'}
     test = 0
-    max_time_from_now = timedelta(hours=6)
+    max_time_from_now = timedelta(hours=99)
 
     def __init__(self):
-        #self.match_odds = pd.read_csv("MatchOdds.csv", error_bad_lines=False)
+        
         self.test = 0
+        self.all_match_odds = pd.read_csv("MatchOdds.csv", error_bad_lines=False, index_col=0)
 
     def main(self):
 
@@ -56,43 +57,52 @@ class Start:
         #print(matches_soon)
         for match in matches_soon:
             ret = self.scrape_match_page(match)
-            if ret != 0:
-                break #remove l8r
+
+            # if ret != 0:
+            #     break #remove l8r
+            #
+            break
 
 
     def scrape_match_page(self,match_url):
 
-        url = 'https://www.hltv.org' + match_url
+        url = 'https://www.hltv.org' + match_url  # get match soup
         print(url)
         match_id = url.split('/')[4]
         print(match_id)
         match_html = get_html(url,True)
         match_soup = soup(match_html, 'html.parser')
 
+        missing_teams = match_soup.find('div', class_='noteam')  # check for missing team ids
+
+        if(missing_teams):
+            print('team ids are missing')
+            return 0
+
         team1 = match_soup.find('div',class_='team1-gradient')
         team2 = match_soup.find('div', class_='team2-gradient')
 
-        print (team2)
+        #print(team2)
 
-        team1_id = team1.find('a')
+        team1_id = team1.find('a')  # extract team id
         team2_id = team2.find('a')
 
         if team1_id:
             team1_id = team1_id['href'].split('/')[2]
         else:
-            print('error no team id')
+            print('error no team 1 id')
             return 0
 
         if team2_id:
             team2_id= team2_id['href'].split('/')[2]
         else:
-            print('error no team id')
+            print('error no team 2 id')
             return 0
 
         print(team1_id)
         print(team2_id)
 
-        betting_div = match_soup.find('div', class_='betting standard-box padding')
+        betting_div = match_soup.find('div', class_='betting standard-box padding')  # get betting table
         if betting_div == 'None':
             print('error no betting table')
             return 0
@@ -104,20 +114,24 @@ class Start:
         columns = ['Team_1_ID', 'Team_2_ID']
 
         match_odds_dataframe = pd.DataFrame([[team1_id, team2_id]], columns=columns)
+
         # match_odds_dataframe['Team_1_ID'] = int(team1_id)
         # match_odds_dataframe['Team_2_ID'] = int(team2_id)
         #match_odds_dataframe = match_odds_dataframe.append()
+
         match_odds_dataframe.index = [match_id] #insert match id
+
         #print(match_odds_dataframe.head(1))
 
         for tr in table_rows:
 
-
             #geoprovider = tr['id']
             #print(tr)
+            print(tr.get('class')[-1])
 
-            if(str(tr.get('id')).split('_')[0] == 'geoprovider'):
+            if(str(tr.get('id')).split('_')[0] == 'geoprovider'):  # NOT WORK
                 agency = str(tr.get('id')).split('_')[1]
+                # print(agency)
                 odds = tr.find_all('td', class_='odds-cell border-left')
                 if odds:
                     #print(odds[0].text)
@@ -129,8 +143,18 @@ class Start:
                     match_odds_dataframe['%s_team2' % agency] = team2_odds
 
 
-        print(match_odds_dataframe.head(1))
-                #print(agency)
+        print(match_odds_dataframe.head())
+        #print(self.all_match_odds.head())
+        #print(match_id)
+        #print(self.all_match_odds.loc[int(match_id)])
+
+        if int(match_id) in self.all_match_odds.index:
+            #print('its in there alright')
+            self.all_match_odds.update(match_odds_dataframe,overwrite=True)
+        else:
+            self.all_match_odds.append(match_odds_dataframe)
+
+        #self.all_match_odds.to_csv('MatchOdds.csv') testtt
 
         #print(upcoming_matches)
 
