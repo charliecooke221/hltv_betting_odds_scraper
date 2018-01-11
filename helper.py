@@ -1,4 +1,3 @@
-from scraper import *
 import csv
 import sys
 

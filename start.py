@@ -151,9 +151,9 @@ class Start:
         if int(match_id) in self.all_match_odds.index:
 
             self.all_match_odds.update(match_odds_dataframe,overwrite=True)
-            print('updated  %s' % match_id)
+            print('updated ')
         else:
-
+            print('new  id ')
             self.all_match_odds = self.all_match_odds.append(match_odds_dataframe)
 
         #print(self.all_match_odds.head())
