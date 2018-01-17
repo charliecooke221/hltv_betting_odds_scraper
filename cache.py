@@ -4,8 +4,9 @@ import requests
 import requests_cache
 
 
-expiry = timedelta(hours=999999999)
+expiry = timedelta(seconds=120)
 requests_cache.install_cache(expire_after=expiry)
+requests_cache.core.remove_expired_responses() #test dis
 
 
 def get_html(url, cache=True):
@@ -15,9 +16,11 @@ def get_html(url, cache=True):
             # GET the webpage
             request = requests.get(url)
             html = request.content.decode('utf-8')
+            #print('used Cache: %s' % request.headers)
 
             # HLTV has a custom error page for HTTP errors
             if len(re.findall('error-desc', html)) > 0 or len(re.findall('error-500', html)) > 0:
+                print('hltv cache error')
                 return None
 
         # Handle any other errors

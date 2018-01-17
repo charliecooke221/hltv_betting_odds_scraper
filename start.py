@@ -54,7 +54,7 @@ class Start:
                 if time_from_now < self.max_time_from_now:
                     matches_soon.append(match['href'])
 
-        #print(matches_soon)
+        print(matches_soon)
         for match in matches_soon:
             ret = self.scrape_match_page(match)
 
@@ -143,7 +143,7 @@ class Start:
                     match_odds_dataframe['%s_team2' % agency] = team2_odds
 
 
-        #print(match_odds_dataframe.head())
+        print(match_odds_dataframe.head())
         #print(self.all_match_odds.head())
         #print(match_id)
         #print(self.all_match_odds.loc[int(match_id)])
