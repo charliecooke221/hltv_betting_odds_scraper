@@ -152,7 +152,7 @@ class Start:
         sync_columns = ['Team_1_ID','Team_2_ID','egb_team1','egb_team2','betway_team1','betway_team2']
 
         if int(match_id) in self.all_match_odds.index:
-            print(self.all_match_odds.ix[int(match_id)])
+            #print(self.all_match_odds.ix[int(match_id)])
             #self.all_match_odds.update(match_odds_dataframe,overwrite=True)
             #self.all_match_odds = self.all_match_odds.update(match_odds_dataframe,overwrite=True)
 
