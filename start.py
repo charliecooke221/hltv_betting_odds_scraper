@@ -19,6 +19,7 @@ class Start:
         
         self.test = 0
         self.all_match_odds = pd.read_csv("MatchOdds.csv", error_bad_lines=False, index_col=0)
+        #self.all_match_odds = pd.DataFrame()
 
     def main(self):
 
@@ -61,7 +62,7 @@ class Start:
             # if ret != 0:
             #     break #remove l8r
             #
-            #break
+            break
 
 
     def scrape_match_page(self,match_url):
@@ -148,15 +149,23 @@ class Start:
         #print(match_id)
         #print(self.all_match_odds.loc[int(match_id)])
 
-        if int(match_id) in self.all_match_odds.index:
+        sync_columns = ['Team_1_ID','Team_2_ID','egb_team1','egb_team2','betway_team1','betway_team2']
 
-            self.all_match_odds.update(match_odds_dataframe,overwrite=True)
+        if int(match_id) in self.all_match_odds.index:
+            print(self.all_match_odds.ix[int(match_id)])
+            #self.all_match_odds.update(match_odds_dataframe,overwrite=True)
+            #self.all_match_odds = self.all_match_odds.update(match_odds_dataframe,overwrite=True)
+
+            self.all_match_odds.drop(int(match_id) ,inplace=True)
+            self.all_match_odds = self.all_match_odds.append(match_odds_dataframe)
+
+
             print('updated ')
         else:
             print('new  id ')
             self.all_match_odds = self.all_match_odds.append(match_odds_dataframe)
 
-        #print(self.all_match_odds.head())
+        #print(self.all_match_odds.head(n=1))
 
 
         self.all_match_odds.to_csv('MatchOdds.csv')
