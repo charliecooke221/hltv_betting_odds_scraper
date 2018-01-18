@@ -62,7 +62,7 @@ class Start:
             # if ret != 0:
             #     break #remove l8r
             #
-            break
+            #break
 
 
     def scrape_match_page(self,match_url):
