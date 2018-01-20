@@ -1,7 +1,9 @@
+
 import pandas as pd
 import os
 from datetime import datetime
 from datetime import timedelta
+print('FUCK BITCHES MAKE MONEY')
 from urllib.request import Request
 from urllib.request import urlopen
 from cache import get_html
