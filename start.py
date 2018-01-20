@@ -1,4 +1,5 @@
 import pandas as pd
+import os
 from datetime import datetime
 from datetime import timedelta
 from urllib.request import Request
@@ -16,9 +17,11 @@ class Start:
     max_time_from_now = timedelta(hours=24)
 
     def __init__(self):
-        
+        CURRENT_DIR = os.path.dirname(__file__)
+        self.match_odds_file_path = os.path.join(CURRENT_DIR,"MatchOdds.csv")
+        print(self.match_odds_file_path)
         self.test = 0
-        self.all_match_odds = pd.read_csv("MatchOdds.csv", error_bad_lines=False, index_col=0)
+        self.all_match_odds = pd.read_csv(self.match_odds_file_path, error_bad_lines=False, index_col=0)
         #self.all_match_odds = pd.DataFrame()
 
     def main(self):
@@ -168,7 +171,7 @@ class Start:
         #print(self.all_match_odds.head(n=1))
 
 
-        self.all_match_odds.to_csv('MatchOdds.csv')
+        self.all_match_odds.to_csv(self.match_odds_file_path)
 
         #print(upcoming_matches)
 
