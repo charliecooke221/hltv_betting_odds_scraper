@@ -1,14 +1,15 @@
 
 import pandas as pd
 import os
+import time
+
 from datetime import datetime
 from datetime import timedelta
-print('FUCK BITCHES MAKE MONEY')
 from urllib.request import Request
 from urllib.request import urlopen
 from cache import get_html
-
 from bs4 import BeautifulSoup as soup
+
 
 
 class Start:
@@ -16,24 +17,25 @@ class Start:
     upcoming_matches_url = 'https://www.hltv.org/matches'
     hdr = {'User-Agent' : 'Mozilla/5.0'}
     test = 0
-    max_time_from_now = timedelta(hours=24)
+    max_time_from_now = timedelta(hours=12)
 
     def __init__(self):
         CURRENT_DIR = os.path.dirname(__file__)
         self.match_odds_file_path = os.path.join(CURRENT_DIR,"MatchOdds.csv")
-        print(self.match_odds_file_path)
         self.test = 0
         self.all_match_odds = pd.read_csv(self.match_odds_file_path, error_bad_lines=False, index_col=0)
+
+        self.updated_match_count = 0
+        self.new_match_count = 0
         #self.all_match_odds = pd.DataFrame()
 
     def main(self):
-
-
         req = Request(self.upcoming_matches_url, headers= self.hdr)
         u_client = urlopen(req)
         matches_html = u_client.read()
         u_client.close()
         now = datetime.now()
+        start_time = time.time()
 
         matches_soup = soup(matches_html, 'html.parser')
         upcoming_matches = matches_soup.find_all('div', class_='upcoming-matches')
@@ -47,9 +49,9 @@ class Start:
 
             for match in div.find_all('a'):
                 #print(match['href'])
-                time = match.find('div', class_='time')
-                time = time.text.split(':')
-                match_time = match_time.replace(hour= int(time[0]), minute= int(time[1]))
+                time_str = match.find('div', class_='time')
+                time_str = time_str.text.split(':')
+                match_time = match_time.replace(hour= int(time_str[0]), minute= int(time_str[1]))
                 time_from_now = match_time - now
                 #print(match_time)
                 #print(time_from_now)
@@ -60,7 +62,7 @@ class Start:
                 if time_from_now < self.max_time_from_now:
                     matches_soon.append(match['href'])
 
-        print(matches_soon)
+        #print(matches_soon)
         for match in matches_soon:
             ret = self.scrape_match_page(match)
 
@@ -69,20 +71,22 @@ class Start:
             #
             #break
 
+        elapsed_time = time.time() - start_time
+        print("scraper run at: %s. elapsed time: %s \nmatches added: %s  matches updated: %s\n" % (str(now), elapsed_time, self.new_match_count, self.updated_match_count))
 
     def scrape_match_page(self,match_url):
 
         url = 'https://www.hltv.org' + match_url  # get match soup
-        print(url)
+        #print(url)
         match_id = url.split('/')[4]
-        print(match_id)
+        #print(match_id)
         match_html = get_html(url,True)
         match_soup = soup(match_html, 'html.parser')
 
         missing_teams = match_soup.find('div', class_='noteam')  # check for missing team ids
 
         if(missing_teams):
-            print('team ids are missing')
+            #print('team ids are missing')
             return 0
 
         team1 = match_soup.find('div',class_='team1-gradient')
@@ -96,17 +100,17 @@ class Start:
         if team1_id:
             team1_id = team1_id['href'].split('/')[2]
         else:
-            print('error no team 1 id')
+            #print('error no team 1 id')
             return 0
 
         if team2_id:
             team2_id= team2_id['href'].split('/')[2]
         else:
-            print('error no team 2 id')
+            #print('error no team 2 id')
             return 0
 
-        print(team1_id)
-        print(team2_id)
+        #print(team1_id)
+        #print(team2_id)
 
         betting_div = match_soup.find('div', class_='betting standard-box padding')  # get betting table
         if betting_div == 'None':
@@ -149,7 +153,7 @@ class Start:
                     match_odds_dataframe['%s_team2' % agency] = team2_odds
 
 
-        print(match_odds_dataframe.head())
+        #print(match_odds_dataframe.head())
         #print(self.all_match_odds.head())
         #print(match_id)
         #print(self.all_match_odds.loc[int(match_id)])
@@ -164,11 +168,14 @@ class Start:
             self.all_match_odds.drop(int(match_id) ,inplace=True)
             self.all_match_odds = self.all_match_odds.append(match_odds_dataframe)
 
+            #print('updated ')
 
-            print('updated ')
+            self.updated_match_count += 1
+
         else:
-            print('new  id ')
+            #print('new  id ')
             self.all_match_odds = self.all_match_odds.append(match_odds_dataframe)
+            self.new_match_count += 1
 
         #print(self.all_match_odds.head(n=1))
 
